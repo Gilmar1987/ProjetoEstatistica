@@ -1,0 +1,233 @@
+---
+title: "Estatística1VA"
+author: "Gilmar Rodrigues Campelo"
+date: "2023-01-26"
+output: 
+    html_document:
+        toc: yes 
+        toc_float:
+          collapsed: yes
+          smooth: no
+         
+---
+
+# Análise da Ocorrencia de Enterococcus nas Prais do Lintoral Paulista
+
+
+![Litoral Paulista](https://upload.wikimedia.org/wikipedia/commons/0/08/LitoralPaulista.jpg){ width=50% } 
+
+Fonte:https://upload.wikimedia.org/wikipedia/commons/0/08/LitoralPaulista.jpg
+
+# 1 Banco de Dados
+
+
+O banco de dados tráz a ocorrência do Enterococcus nas prais do litoral paulista.   
+
+
+A área selecionada foi a da região de Mongaguá 
+
+
+# 2 Pacotes Carregados
+
+library(readxl)
+
+library(magrittr)
+
+library(dplyr)
+
+library(ggplot2)
+
+## 2.1 BLOCO PARA SELECIONAR A CIDADE DE MONGAGUÁ
+
+dados <- read_excel(path = "C:/Users/gilma/OneDrive/Documentos/UFRPE/Estatistica/Projeto1VA/sp_beaches.xlsx")%>% 
+  filter(City == 'MONGAGUÁ')
+  
+  
+
+## 2.2 TRANSFORMA A COLUNA ENTEROCCCUS EM NUMERICA  
+
+group_by(Beach)%>% mutate( Enterococcus=as.numeric(Enterococcus)
+
+
+Nessa etapa os dados da coluna entereroccus foi transformada em numérica  
+
+
+
+## 2.3 CALCULAR AS MEDIAS
+  summarise(Media=mean(Enterococcus),DesvioPadrao=sd(Enterococcus),
+            Mediana=median(Enterococcus),Q1=quantile(Enterococcus, probs = 0.25),
+            Q3=quantile(Enterococcus, probs = 0.75),Minimo=min(Enterococcus),
+            Maximo=max(Enterococcus))
+
+# 3 Código
+
+## 3.1 Pacotes
+
+``` {r ,warning= FALSE, message=FALSE}
+library(readxl)
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+
+```
+
+## 3.2 Gerar Dados Brutos
+### 3.2.1 Dados Brutos em Páginas 
+
+Os dados brutos são referentes a todas as prais da cidade de Mongaguá   e estão dispostos em páginas.
+
+
+```{r dados brutos com varias paginas}
+dados2 <-  read_excel(path = "C:/Users/gilma/OneDrive/Documentos/UFRPE/Estatistica/Projeto1VA/sp_beaches.xlsx")%>%
+  filter(City == 'MONGAGUÁ')%>%  
+  mutate( Enterococcus=as.numeric(Enterococcus))
+library(rmarkdown)
+paged_table(dados2)
+
+```
+
+
+## 3.3 Carregando MÉDIAS 
+
+Apresentação da média, desvio padrão, dediana e os quartis com ponto 
+
+
+mínimo e máximo.
+
+
+```{r Carregando Dados}
+dados <- read_excel(path = "C:/Users/gilma/OneDrive/Documentos/UFRPE/Estatistica/Projeto1VA/sp_beaches.xlsx")%>% 
+  filter(City == 'MONGAGUÁ')%>%
+  group_by(Beach)%>% mutate( Enterococcus=as.numeric(Enterococcus))%>%
+  summarise(Media=mean(Enterococcus),DesvioPadrao=sd(Enterococcus),
+            Mediana=median(Enterococcus),Q1=quantile(Enterococcus, probs = 0.25),
+            Q3=quantile(Enterococcus, probs = 0.75),Minimo=min(Enterococcus),
+            Maximo=max(Enterococcus))
+
+```
+
+```{r Mostrar Médias }
+library(rmarkdown)
+paged_table(dados)
+
+```
+
+
+```{r, include=FALSE}
+dados1 <-  read_excel(path = "C:/Users/gilma/OneDrive/Documentos/UFRPE/Estatistica/Projeto1VA/sp_beaches.xlsx")%>%
+  filter(City == 'MONGAGUÁ')%>%
+  group_by(Beach) %>% summarise(Contagem = n())%>%
+  mutate(freq_relat=Contagem/sum(Contagem)) %>%  
+  mutate(freq_relat=round(freq_relat*100, 2))
+
+```
+
+# 4 GRÁFICOS
+
+## 4.1 GRAFICO DE FREQUENCIA EM ORDEM CRESCENTE
+
+Gráfico da ocorrencia de enterococcus nas prais em percentual e em ordem 
+
+crescente.
+
+```{r , include=FALSE}
+grafico01 <- ggplot(dados1, aes(y = Contagem, label= freq_relat, x = reorder(Beach , Contagem))) +
+  geom_col( width = 0.2) +
+  geom_col(fill ="red")+
+  geom_label(aes( label= freq_relat),vjust= -0)+
+  labs(title = "Gráfico 01 : Beach Frequencia Crescente %" , 
+       subtitle = " Fonte: SP_BEACHES.XLSX")+
+  theme_light(base_size = 8)
+
+```
+```{r}
+grafico01
+```
+
+## 4.2 GRÁFICO DE FREQUENCIA EM ORDEM DECRESCENTE
+
+Gráfico da ocorrencia de enterococcus nas prais em percentual e em ordem 
+
+decrescente.
+
+```{r, include=FALSE}
+grafico02 <- ggplot(dados1, aes(y = Contagem, x = reorder(Beach , -Contagem))) +
+  geom_bar(stat = "identity", width = 0.5) +
+  geom_col(fill ="blue")+ 
+  geom_label(aes( label= freq_relat),vjust= -0)+
+  labs(title = "Gráfico 02 : Beach Frequencia Decrescente %" , 
+       subtitle = " Fonte: SP_BEACHES.XLSX")+
+  theme_light(base_size = 8)
+
+```
+```{r}
+grafico02
+``` 
+
+## 4.3 GRAFICO EM PIZZA 
+
+```{r, include=FALSE}
+grafico03 <-ggplot(dados1, aes(x = "", y = freq_relat, fill = Beach, ))+
+  geom_bar(width =  1 , stat = "identity")+
+  labs(title = "Gráfico 03 : Beach Frequencia Pizza %" , 
+       subtitle = " Fonte: SP_BEACHES.XLSX")+
+  coord_polar("y" , start = 0, direction = 1)+
+  #theme_light()
+  geom_text(data = dados1, aes(x="" , y = freq_relat, label= freq_relat),position=position_stack(vjust=0.4))
+  
+
+```
+```{r}
+grafico03
+```
+
+
+## 4.4 GRÁFICO EM PIZZA 
+
+```{r,  include=FALSE}
+grafico04<- ggplot(dados1, aes(x = "", y = freq_relat, fill = Beach, ))+
+  geom_bar(width =  1 , stat = "identity")+
+  labs(title = "Gráfico 03 : Beach Frequencia Pizza %" , 
+       subtitle = " Fonte: SP_BEACHES.XLSX")+
+  coord_polar("y" , start = 0, direction = -1)+
+  #theme_light()
+  geom_text(data = dados1, aes(x="" , y = freq_relat, label= freq_relat),position=position_stack(vjust=0.4))
+
+
+```
+```{r}
+grafico04
+```
+
+
+##   4.5 Gráfico Histograma Enterococcus
+
+```{r grafico05,  include=FALSE}
+grafico05 <-ggplot(dados2) +
+  aes(x = Enterococcus) +
+  geom_histogram(bins = 30L, fill = "orange") +
+   labs(title = "Gráfico 05 : Histograma Enterococcus" , 
+        subtitle = " Fonte: SP_BEACHES.XLSX")+
+  theme_minimal(base_size = 8)
+
+```
+```{r}
+grafico05
+```
+
+
+## 4.6 Boxplot Beach x Enterococcus
+
+O Boxplot que todas as medianas estão próximas de Q1 então, os dados são
+
+
+positivamente assimétricos. E com poucos pontos fora da faixa de máximo
+
+
+```{r}
+ ggplot(dados2, aes(x = Beach, y = Enterococcus)) +
+  geom_boxplot(aes(color=factor(Beach)))+
+  labs(title = "Gráfico 05 : Boxplot" , 
+  subtitle = " Fonte: SP_BEACHES.XLSX")+
+  theme_minimal(base_size = 7)
+```
